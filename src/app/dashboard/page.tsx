@@ -151,9 +151,9 @@ export default function DashboardPage() {
         {/* Sightings by Shape */}
         <ChartCard title="Sightings by Shape">
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={shapeData} layout="vertical" margin={{ left: 60 }}>
+            <BarChart data={shapeData} layout="vertical" margin={{ left: 0, right: 10 }}>
               <XAxis type="number" hide />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: "var(--text-secondary)" }} width={60} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: "var(--text-secondary)" }} width={75} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="count" fill="#22C55E" radius={[0, 4, 4, 0]} />
             </BarChart>
@@ -186,9 +186,9 @@ export default function DashboardPage() {
         {/* Top States */}
         <ChartCard title="Top States">
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stateData} layout="vertical" margin={{ left: 30 }}>
+            <BarChart data={stateData} layout="vertical" margin={{ left: 0, right: 10 }}>
               <XAxis type="number" hide />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} width={30} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} width={35} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="count" fill="#22C55E" radius={[0, 4, 4, 0]} />
             </BarChart>
@@ -197,8 +197,8 @@ export default function DashboardPage() {
 
         {/* Time of Day */}
         <ChartCard title="Time of Day">
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={hourData}>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={hourData} margin={{ left: 5, right: 5 }}>
               <XAxis
                 dataKey="name"
                 tick={{ fontSize: 9, fill: "var(--text-secondary)" }}
@@ -213,8 +213,8 @@ export default function DashboardPage() {
 
         {/* Sightings by Month */}
         <ChartCard title="Sightings by Month">
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={monthData}>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={monthData} margin={{ left: 5, right: 5 }}>
               <XAxis
                 dataKey="name"
                 tick={{ fontSize: 11, fill: "var(--text-secondary)" }}

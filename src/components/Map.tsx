@@ -333,7 +333,7 @@ export default function Map() {
     (filters.dateTo ? 1 : 0);
 
   return (
-    <div className="relative h-[calc(100vh-7.5rem)] w-full">
+    <div className="relative h-[calc(100vh-7.5rem)] w-full overflow-hidden">
       {/* The Leaflet map */}
       <MapContainer
         center={DEFAULT_CENTER}

@@ -52,10 +52,12 @@ export default function SightingPanel({ sighting, isOpen, onClose }: SightingPan
       {/* The slide-up panel */}
       <div
         ref={panelRef}
-        className={`absolute bottom-0 left-0 right-0 z-[1002] max-h-[65vh]
-                     rounded-t-2xl bg-bg-primary shadow-2xl
-                     transition-transform duration-300 ease-out
-                     ${isOpen ? "translate-y-0" : "translate-y-full"}`}
+        style={{
+          translate: isOpen ? "0 0" : "0 100%",
+          transition: "translate 300ms ease-out",
+        }}
+        className="absolute bottom-0 left-0 right-0 z-[1002] max-h-[65vh]
+                     rounded-t-2xl bg-bg-primary shadow-2xl"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-2">

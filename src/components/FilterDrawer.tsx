@@ -92,10 +92,12 @@ export default function FilterDrawer({
 
       {/* Drawer */}
       <div
-        className={`absolute bottom-0 left-0 right-0 z-[1004] max-h-[75vh]
-                     rounded-t-2xl bg-bg-primary shadow-2xl
-                     transition-transform duration-250 ease-out
-                     ${isOpen ? "translate-y-0" : "translate-y-full"}`}
+        style={{
+          translate: isOpen ? "0 0" : "0 100%",
+          transition: "translate 250ms ease-out",
+        }}
+        className="absolute bottom-0 left-0 right-0 z-[1004] max-h-[75vh]
+                     rounded-t-2xl bg-bg-primary shadow-2xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border">
