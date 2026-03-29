@@ -1,50 +1,45 @@
 /**
  * MapControls — Floating control buttons overlaid on the map.
  *
+ * Rendered OUTSIDE of MapContainer (as regular DOM elements) to avoid
+ * the useLeafletContext error. Receives the Leaflet map instance as a prop.
+ *
  * Top-left: Filter button with active filter badge
  * Top-right: Zoom in, Zoom out, Near Me
  * Bottom-left: Heatmap toggle
- *
- * All buttons have 44px minimum touch targets.
  */
 
 "use client";
 
 import { Plus, Minus, SlidersHorizontal, Crosshair, Loader2 } from "lucide-react";
-import { useMap } from "react-leaflet";
+import type L from "leaflet";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { cn } from "@/lib/utils";
 
 interface MapControlsProps {
+  map: L.Map;
   onFilterClick: () => void;
   activeFilterCount: number;
   heatmapActive: boolean;
   onHeatmapToggle: () => void;
 }
 
-export default function MapControls({
+export default function MapControlsOverlay({
+  map,
   onFilterClick,
   activeFilterCount,
   heatmapActive,
   onHeatmapToggle,
 }: MapControlsProps) {
-  const map = useMap();
   const { loading: geoLoading, error: geoError, requestLocation, latitude, longitude } = useGeolocation();
 
   /* Handle Near Me click — fly to user's location */
   function handleNearMe() {
     if (latitude && longitude) {
-      /* Already have location, fly there */
       map.flyTo([latitude, longitude], 10, { duration: 1 });
     } else {
-      /* Request location, then fly there */
       requestLocation();
     }
-  }
-
-  /* Fly to location when it becomes available */
-  if (latitude && longitude && !geoLoading) {
-    /* This gets called on re-render after location is obtained */
   }
 
   return (

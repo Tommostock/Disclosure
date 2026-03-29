@@ -22,7 +22,7 @@ import type { MapPoint } from "@/lib/queries";
 import type { Sighting } from "@/lib/database.types";
 import SightingPanel from "./SightingPanel";
 import FilterDrawer from "./FilterDrawer";
-import MapControls from "./MapControls";
+import MapControlsOverlay from "./MapControls";
 import type { SightingFilters } from "@/lib/queries";
 
 /* ---- Constants ---- */
@@ -278,6 +278,15 @@ function MapContent({
 
 /* ---- Main Map Component ---- */
 
+/* Small helper component to capture the map instance from inside MapContainer */
+function MapRefCapture({ onMapReady }: { onMapReady: (map: L.Map) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    onMapReady(map);
+  }, [map, onMapReady]);
+  return null;
+}
+
 export default function Map() {
   const [, setSelectedSightingId] = useState<number | null>(null);
   const [selectedSighting, setSelectedSighting] = useState<Sighting | null>(null);
@@ -285,6 +294,7 @@ export default function Map() {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<SightingFilters>({});
   const [heatmapActive, setHeatmapActive] = useState(false);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
   /* Fetch full sighting details when a marker is clicked */
   const handleSightingSelect = useCallback(async (id: number) => {
@@ -337,15 +347,19 @@ export default function Map() {
           filters={filters}
           onSightingSelect={handleSightingSelect}
         />
+        <MapRefCapture onMapReady={setMapInstance} />
       </MapContainer>
 
-      {/* Floating map controls */}
-      <MapControls
-        onFilterClick={() => setFilterDrawerOpen(true)}
-        activeFilterCount={activeFilterCount}
-        heatmapActive={heatmapActive}
-        onHeatmapToggle={() => setHeatmapActive(!heatmapActive)}
-      />
+      {/* Floating map controls — rendered outside MapContainer as regular DOM */}
+      {mapInstance && (
+        <MapControlsOverlay
+          map={mapInstance}
+          onFilterClick={() => setFilterDrawerOpen(true)}
+          activeFilterCount={activeFilterCount}
+          heatmapActive={heatmapActive}
+          onHeatmapToggle={() => setHeatmapActive(!heatmapActive)}
+        />
+      )}
 
       {/* Slide-up sighting detail panel */}
       <SightingPanel
