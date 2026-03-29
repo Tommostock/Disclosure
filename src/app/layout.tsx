@@ -15,6 +15,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import OfflineBanner from "@/components/OfflineBanner";
 
 /* Load Space Grotesk — the only font used in the app */
 const spaceGrotesk = Space_Grotesk({
@@ -53,6 +54,9 @@ export default function RootLayout({
       <body className={`${spaceGrotesk.variable} font-sans antialiased`}>
         {/* Fixed header at top */}
         <Header />
+
+        {/* Offline detection banner — shows below header when offline */}
+        <OfflineBanner />
 
         {/* Main content area — padded to avoid overlap with header and nav */}
         <main className="pt-14 pb-16 min-h-screen">

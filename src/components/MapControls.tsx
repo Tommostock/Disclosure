@@ -11,8 +11,9 @@
 
 "use client";
 
-import { Plus, Minus, SlidersHorizontal, Crosshair, Loader2 } from "lucide-react";
-import type L from "leaflet";
+import { useEffect, useRef } from "react";
+import { Plus, Minus, SlidersHorizontal, Crosshair, Loader2, Globe } from "lucide-react";
+import L from "leaflet";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,8 @@ interface MapControlsProps {
   activeFilterCount: number;
   heatmapActive: boolean;
   onHeatmapToggle: () => void;
+  satelliteView: boolean;
+  onSatelliteToggle: () => void;
 }
 
 export default function MapControlsOverlay({
@@ -30,14 +33,43 @@ export default function MapControlsOverlay({
   activeFilterCount,
   heatmapActive,
   onHeatmapToggle,
+  satelliteView,
+  onSatelliteToggle,
 }: MapControlsProps) {
   const { loading: geoLoading, error: geoError, requestLocation, latitude, longitude } = useGeolocation();
+  const userMarkerRef = useRef<L.CircleMarker | null>(null);
+  const hasFlewRef = useRef(false);
 
-  /* Handle Near Me click — fly to user's location */
+  /* When coordinates arrive (async), fly to them and show a blue dot */
+  useEffect(() => {
+    if (latitude && longitude && !hasFlewRef.current) {
+      map.flyTo([latitude, longitude], 10, { duration: 1 });
+      hasFlewRef.current = true;
+
+      /* Remove old marker if exists */
+      if (userMarkerRef.current) {
+        map.removeLayer(userMarkerRef.current);
+      }
+
+      /* Add a blue pulsing dot at the user's location */
+      userMarkerRef.current = L.circleMarker([latitude, longitude], {
+        radius: 8,
+        fillColor: "#3B82F6",
+        fillOpacity: 1,
+        color: "#3B82F6",
+        weight: 2,
+        opacity: 0.4,
+        className: "user-location-pulse",
+      }).addTo(map);
+    }
+  }, [latitude, longitude, map]);
+
+  /* Handle Near Me click — request location or fly to cached location */
   function handleNearMe() {
     if (latitude && longitude) {
       map.flyTo([latitude, longitude], 10, { duration: 1 });
     } else {
+      hasFlewRef.current = false; /* Allow fly on next coordinate arrival */
       requestLocation();
     }
   }
@@ -104,8 +136,8 @@ export default function MapControlsOverlay({
         </button>
       </div>
 
-      {/* Bottom-left: Heatmap toggle */}
-      <div className="absolute bottom-4 left-4 z-[1000]">
+      {/* Bottom-left: Heatmap + Satellite toggles */}
+      <div className="absolute bottom-4 left-4 z-[1000] flex gap-2">
         <button
           onClick={onHeatmapToggle}
           className={cn(
@@ -116,6 +148,18 @@ export default function MapControlsOverlay({
           )}
         >
           Heatmap
+        </button>
+        <button
+          onClick={onSatelliteToggle}
+          className={cn(
+            "flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium shadow-md border transition-colors",
+            satelliteView
+              ? "bg-accent text-black border-accent"
+              : "bg-bg-primary text-text-primary border-border hover:bg-bg-secondary"
+          )}
+        >
+          <Globe size={14} strokeWidth={1.5} />
+          Satellite
         </button>
       </div>
 

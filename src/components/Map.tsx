@@ -29,9 +29,15 @@ import type { SightingFilters } from "@/lib/queries";
 /* ---- Constants ---- */
 const DEFAULT_CENTER: [number, number] = [39.8, -98.5]; /* Center of continental US */
 const DEFAULT_ZOOM = 4;
-const TILE_URL_DARK = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-const TILE_URL_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
+/* Tile layer options — theme-aware + satellite toggle */
+const TILES = {
+  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  satellite: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+} as const;
 const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>';
+const SATELLITE_ATTRIBUTION = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
 
 /* ---- Cluster marker creation ---- */
 
@@ -70,16 +76,10 @@ function createClusterIcon(count: number, size: number): L.DivIcon {
 /** Creates a small green dot marker for an individual sighting */
 function createPointIcon(): L.DivIcon {
   return L.divIcon({
-    html: `<div style="
-      width: 10px;
-      height: 10px;
-      background: #22C55E;
-      border-radius: 50%;
-      box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
-    "></div>`,
+    html: `<div class="sighting-pin"></div>`,
     className: "",
-    iconSize: L.point(10, 10),
-    iconAnchor: L.point(5, 5),
+    iconSize: L.point(12, 12),
+    iconAnchor: L.point(6, 6),
   });
 }
 
@@ -105,10 +105,14 @@ function MapContent({
   filters,
   onSightingSelect,
   heatmapActive,
+  onPointCountChange,
+  onLoadingChange,
 }: {
   filters: SightingFilters;
   onSightingSelect: (id: number) => void;
   heatmapActive: boolean;
+  onPointCountChange: (count: number) => void;
+  onLoadingChange: (loading: boolean) => void;
 }) {
   const map = useMap();
   const [points, setPoints] = useState<MapPoint[]>([]);
@@ -117,6 +121,10 @@ function MapContent({
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
+  const onPointCountChangeRef = useRef(onPointCountChange);
+  onPointCountChangeRef.current = onPointCountChange;
+  const onLoadingChangeRef = useRef(onLoadingChange);
+  onLoadingChangeRef.current = onLoadingChange;
 
   /* Create a Supercluster instance */
   const clusterIndex = useMemo(() => {
@@ -151,14 +159,18 @@ function MapContent({
       params.set("dateTo", currentFilters.dateTo);
     }
 
+    onLoadingChangeRef.current(true);
     try {
       const response = await fetch(`/api/sightings?${params}`);
       if (response.ok) {
         const data: MapPoint[] = await response.json();
         setPoints(data);
+        onPointCountChangeRef.current(data.length);
       }
     } catch (error) {
       console.error("Failed to fetch sightings:", error);
+    } finally {
+      onLoadingChangeRef.current(false);
     }
   }, [map]);
 
@@ -346,9 +358,17 @@ export default function Map() {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<SightingFilters>({});
   const [heatmapActive, setHeatmapActive] = useState(false);
+  const [satelliteView, setSatelliteView] = useState(false);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [noResults, setNoResults] = useState(false);
+  const [mapLoading, setMapLoading] = useState(false);
   const { theme } = useTheme();
-  const tileUrl = theme === "light" ? TILE_URL_LIGHT : TILE_URL_DARK;
+
+  /* Pick the correct tile URL based on theme and satellite mode */
+  const tileUrl = satelliteView
+    ? TILES.satellite
+    : theme === "light" ? TILES.light : TILES.dark;
+  const tileAttribution = satelliteView ? SATELLITE_ATTRIBUTION : TILE_ATTRIBUTION;
 
   /* Fetch full sighting details when a marker is clicked */
   const handleSightingSelect = useCallback(async (id: number) => {
@@ -396,11 +416,17 @@ export default function Map() {
         zoomControl={false} /* We use custom zoom controls */
         attributionControl={true}
       >
-        <TileLayer key={tileUrl} url={tileUrl} attribution={TILE_ATTRIBUTION} />
+        <TileLayer key={tileUrl} url={tileUrl} attribution={tileAttribution} />
         <MapContent
           filters={filters}
           onSightingSelect={handleSightingSelect}
           heatmapActive={heatmapActive}
+          onPointCountChange={(count) => {
+            /* Show "no results" toast only when filters are active */
+            const hasFilters = (filters.shapes?.length || 0) > 0 || !!filters.state || !!filters.dateFrom || !!filters.dateTo;
+            setNoResults(hasFilters && count === 0);
+          }}
+          onLoadingChange={setMapLoading}
         />
         <MapRefCapture onMapReady={setMapInstance} />
       </MapContainer>
@@ -413,6 +439,8 @@ export default function Map() {
           activeFilterCount={activeFilterCount}
           heatmapActive={heatmapActive}
           onHeatmapToggle={() => setHeatmapActive(!heatmapActive)}
+          satelliteView={satelliteView}
+          onSatelliteToggle={() => setSatelliteView(!satelliteView)}
         />
       )}
 
@@ -422,6 +450,24 @@ export default function Map() {
         isOpen={panelOpen}
         onClose={handleClosePanel}
       />
+
+      {/* Map data loading spinner — small green spinner while fetching */}
+      {mapLoading && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000]">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        </div>
+      )}
+
+      {/* No results toast — shown when active filters return zero sightings */}
+      {noResults && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000]">
+          <div className="rounded-lg bg-bg-primary border border-border px-4 py-2.5 shadow-lg">
+            <p className="text-xs text-text-secondary whitespace-nowrap">
+              No sightings match your current filters.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Filter drawer */}
       <FilterDrawer

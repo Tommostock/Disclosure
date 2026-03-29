@@ -87,7 +87,15 @@ export default async function SightingDetailPage({ params }: SightingDetailPageP
 
       {/* Source */}
       <p className="text-xs text-text-tertiary">
-        Source: {sighting.source || "NUFORC"}
+        Source:{" "}
+        <a
+          href="https://nuforc.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-text-secondary transition-colors"
+        >
+          {sighting.source || "NUFORC"}
+        </a>
       </p>
 
       {/* Mini map preview + View on Map link */}

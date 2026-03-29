@@ -127,8 +127,8 @@ export default function FilterDrawer({
                     className={cn(
                       "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
                       isSelected
-                        ? "bg-accent text-black"
-                        : "bg-bg-tertiary text-text-secondary hover:bg-border"
+                        ? "bg-accent text-black border border-accent"
+                        : "bg-transparent text-text-secondary border border-border-strong hover:border-accent hover:text-accent"
                     )}
                   >
                     {shape}

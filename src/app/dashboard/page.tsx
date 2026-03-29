@@ -148,13 +148,14 @@ export default function DashboardPage() {
   }));
 
   return (
-    <div className="px-4 py-4 md:px-6 lg:px-8 max-w-5xl mx-auto">
-      {/* Hero stat */}
+    <div className="px-4 py-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* Hero stat — large green number with underline accent */}
       <div className="mb-6 text-center">
         <p className="text-4xl font-bold text-accent md:text-5xl">
           {formatNumber(stats.total)}
         </p>
-        <p className="mt-1 text-sm text-text-secondary">Reported UFO Sightings</p>
+        <div className="mx-auto mt-2 h-0.5 w-16 rounded-full bg-accent" />
+        <p className="mt-2 text-sm text-text-secondary">Reported UFO Sightings</p>
       </div>
 
       {/* Charts grid */}

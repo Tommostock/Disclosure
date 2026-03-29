@@ -118,7 +118,15 @@ export default function SightingPanel({ sighting, isOpen, onClose }: SightingPan
 
               {/* Source */}
               <p className="text-xs text-text-tertiary">
-                Source: {sighting.source || "NUFORC"}
+                Source:{" "}
+                <a
+                  href="https://nuforc.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-text-secondary transition-colors"
+                >
+                  {sighting.source || "NUFORC"}
+                </a>
               </p>
             </div>
           ) : (

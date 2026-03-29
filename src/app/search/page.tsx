@@ -98,7 +98,7 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="px-4 py-4 md:px-6 lg:px-8 max-w-5xl mx-auto">
+    <div className="px-4 py-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Search bar */}
       <div className="relative mb-4">
         <Search
@@ -167,8 +167,8 @@ export default function SearchPage() {
                     className={cn(
                       "rounded-full px-3 py-1 text-xs font-medium transition-colors",
                       isSelected
-                        ? "bg-accent text-black"
-                        : "bg-bg-tertiary text-text-secondary hover:bg-border"
+                        ? "bg-accent text-black border border-accent"
+                        : "bg-transparent text-text-secondary border border-border-strong hover:border-accent hover:text-accent"
                     )}
                   >
                     {shape}
