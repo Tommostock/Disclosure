@@ -10,7 +10,7 @@
 
 import Link from "next/link";
 import type { Sighting } from "@/lib/database.types";
-import { formatDate, normalizeShape, truncateText } from "@/lib/utils";
+import { formatDate, normalizeShape, truncateText, toTitleCase } from "@/lib/utils";
 
 interface SightingCardProps {
   sighting: Sighting;
@@ -26,7 +26,7 @@ export default function SightingCard({ sighting, showYear }: SightingCardProps) 
   return (
     <Link
       href={`/sighting/${sighting.id}`}
-      className="block rounded-xl border border-border bg-bg-secondary p-4
+      className="card-surface block rounded-xl border border-border bg-bg-secondary p-4
                  hover:bg-bg-tertiary active:scale-[0.98] transition-all duration-150"
     >
       <div className="flex items-start gap-3">
@@ -53,7 +53,7 @@ export default function SightingCard({ sighting, showYear }: SightingCardProps) 
 
           {/* City, State */}
           <h3 className="text-sm font-semibold text-text-primary mb-1">
-            {[sighting.city, sighting.state].filter(Boolean).join(", ") || "Unknown Location"}
+            {[toTitleCase(sighting.city), sighting.state].filter(Boolean).join(", ") || "Unknown Location"}
           </h3>
 
           {/* Truncated summary */}

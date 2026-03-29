@@ -23,12 +23,14 @@ import type { Sighting } from "@/lib/database.types";
 import SightingPanel from "./SightingPanel";
 import FilterDrawer from "./FilterDrawer";
 import MapControlsOverlay from "./MapControls";
+import { useTheme } from "@/hooks/useTheme";
 import type { SightingFilters } from "@/lib/queries";
 
 /* ---- Constants ---- */
 const DEFAULT_CENTER: [number, number] = [39.8, -98.5]; /* Center of continental US */
 const DEFAULT_ZOOM = 4;
-const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const TILE_URL_DARK = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const TILE_URL_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>';
 
 /* ---- Cluster marker creation ---- */
@@ -102,13 +104,16 @@ interface PointFeature {
 function MapContent({
   filters,
   onSightingSelect,
+  heatmapActive,
 }: {
   filters: SightingFilters;
   onSightingSelect: (id: number) => void;
+  heatmapActive: boolean;
 }) {
   const map = useMap();
   const [points, setPoints] = useState<MapPoint[]>([]);
   const markersRef = useRef<L.LayerGroup>(L.layerGroup());
+  const heatLayerRef = useRef<L.Layer | null>(null);
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
@@ -273,6 +278,53 @@ function MapContent({
     zoomend: renderMarkers,
   });
 
+  /* Heatmap layer — toggle between markers and heatmap */
+  useEffect(() => {
+    if (heatmapActive) {
+      /* Hide clustered markers */
+      markersRef.current.clearLayers();
+
+      /* Create heatmap data: [lat, lng, intensity] */
+      const heatData = points
+        .filter((p) => p.latitude != null && p.longitude != null)
+        .map((p) => [p.latitude!, p.longitude!, 0.5] as [number, number, number]);
+
+      /* Dynamically import leaflet.heat (it extends L) */
+      import("leaflet.heat").then(() => {
+        /* Remove old heatmap if exists */
+        if (heatLayerRef.current && map.hasLayer(heatLayerRef.current)) {
+          map.removeLayer(heatLayerRef.current);
+        }
+
+        /* Create new heatmap layer */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const heat = (L as any).heatLayer(heatData, {
+          radius: 20,
+          blur: 15,
+          maxZoom: 17,
+          gradient: {
+            0.0: "transparent",
+            0.2: "#064e3b",
+            0.4: "#059669",
+            0.6: "#22C55E",
+            0.8: "#4ADE80",
+            1.0: "#86EFAC",
+          },
+        });
+
+        heat.addTo(map);
+        heatLayerRef.current = heat;
+      });
+    } else {
+      /* Remove heatmap layer and re-render markers */
+      if (heatLayerRef.current && map.hasLayer(heatLayerRef.current)) {
+        map.removeLayer(heatLayerRef.current);
+        heatLayerRef.current = null;
+      }
+      renderMarkers();
+    }
+  }, [heatmapActive, points]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return null;
 }
 
@@ -295,6 +347,8 @@ export default function Map() {
   const [filters, setFilters] = useState<SightingFilters>({});
   const [heatmapActive, setHeatmapActive] = useState(false);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const { theme } = useTheme();
+  const tileUrl = theme === "light" ? TILE_URL_LIGHT : TILE_URL_DARK;
 
   /* Fetch full sighting details when a marker is clicked */
   const handleSightingSelect = useCallback(async (id: number) => {
@@ -342,10 +396,11 @@ export default function Map() {
         zoomControl={false} /* We use custom zoom controls */
         attributionControl={true}
       >
-        <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+        <TileLayer key={tileUrl} url={tileUrl} attribution={TILE_ATTRIBUTION} />
         <MapContent
           filters={filters}
           onSightingSelect={handleSightingSelect}
+          heatmapActive={heatmapActive}
         />
         <MapRefCapture onMapReady={setMapInstance} />
       </MapContainer>

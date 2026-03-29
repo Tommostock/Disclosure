@@ -12,7 +12,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Search, SlidersHorizontal, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronDown, ChevronUp, Loader2, X } from "lucide-react";
 import SightingCard from "@/components/SightingCard";
 import { UFO_SHAPES, US_STATES, cn, formatNumber } from "@/lib/utils";
 import type { Sighting } from "@/lib/database.types";
@@ -112,9 +112,20 @@ export default function SearchPage() {
           onChange={(e) => setSearchText(e.target.value)}
           placeholder="Search by city, state, or keyword..."
           className="w-full rounded-lg border border-border-strong bg-bg-tertiary
-                     py-3 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-tertiary
+                     py-3 pl-10 pr-10 text-sm text-text-primary placeholder:text-text-tertiary
                      focus:outline-none focus:ring-2 focus:ring-accent"
         />
+        {/* Clear button — appears when text is entered */}
+        {searchText && (
+          <button
+            onClick={() => setSearchText("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary
+                       hover:text-text-secondary transition-colors"
+            aria-label="Clear search"
+          >
+            <X size={18} strokeWidth={1.5} />
+          </button>
+        )}
       </div>
 
       {/* Collapsible filters */}
@@ -233,8 +244,8 @@ export default function SearchPage() {
         </p>
       )}
 
-      {/* Results list */}
-      <div className="space-y-3">
+      {/* Results list — 2-column grid on tablet+ per design spec */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {results.map((sighting) => (
           <SightingCard key={sighting.id} sighting={sighting} />
         ))}

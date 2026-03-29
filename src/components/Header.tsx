@@ -41,9 +41,9 @@ export default function Header() {
                  justify-between px-4 border-b
                  bg-bg-primary border-border"
     >
-      {/* Wordmark */}
+      {/* Wordmark — green dot accent after the text, per design spec */}
       <Link href="/" className="text-lg font-bold tracking-wider text-text-primary">
-        DISCLOSURE
+        DISCLOSURE<span className="text-accent">.</span>
       </Link>
 
       {/* Right side: theme toggle + overflow menu */}

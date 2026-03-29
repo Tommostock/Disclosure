@@ -20,6 +20,7 @@ import {
 import { Shuffle, Loader2 } from "lucide-react";
 import ChartCard from "@/components/ChartCard";
 import SightingCard from "@/components/SightingCard";
+import ErrorState from "@/components/ErrorState";
 import { formatNumber, normalizeShape } from "@/lib/utils";
 import type { Sighting } from "@/lib/database.types";
 
@@ -44,7 +45,7 @@ interface DashboardStats {
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div className="rounded-lg border border-border bg-bg-primary px-3 py-2 text-xs shadow-lg">
+    <div className="rounded-lg border border-border-strong bg-bg-primary px-3 py-2 text-xs shadow-lg">
       <p className="font-medium text-text-primary">{label}</p>
       <p className="text-accent">{formatNumber(payload[0].value)} sightings</p>
     </div>
@@ -54,26 +55,32 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [randomSighting, setRandomSighting] = useState<Sighting | null>(null);
   const [randomLoading, setRandomLoading] = useState(false);
 
   /* Fetch dashboard stats */
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const response = await fetch("/api/sightings/stats");
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
-      } finally {
-        setLoading(false);
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const response = await fetch("/api/sightings/stats");
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      } else {
+        setError(true);
       }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-    fetchStats();
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   /* Fetch random sighting */
   const fetchRandom = useCallback(async () => {
@@ -99,10 +106,14 @@ export default function DashboardPage() {
     );
   }
 
-  if (!stats) {
+  if (error || !stats) {
     return (
       <div className="flex h-[calc(100vh-7.5rem)] items-center justify-center">
-        <p className="text-text-tertiary">Unable to load dashboard data.</p>
+        <ErrorState
+          message="Unable to load dashboard data. Check your connection and try again."
+          isOffline={!navigator.onLine}
+          onRetry={fetchStats}
+        />
       </div>
     );
   }
@@ -176,8 +187,9 @@ export default function DashboardPage() {
                 type="monotone"
                 dataKey="count"
                 stroke="#22C55E"
+                strokeWidth={2}
                 fill="#22C55E"
-                fillOpacity={0.2}
+                fillOpacity={0.35}
               />
             </AreaChart>
           </ResponsiveContainer>

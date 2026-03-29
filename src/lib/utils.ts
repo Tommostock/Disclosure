@@ -76,6 +76,25 @@ export function normalizeShape(shape: string | null | undefined): string {
 }
 
 /**
+ * Converts a string to title case (e.g., "san marcos" => "San Marcos").
+ * Handles common short words like "of", "the", "and" by keeping them lowercase
+ * unless they are the first word.
+ */
+export function toTitleCase(text: string | null | undefined): string {
+  if (!text) return "";
+  const lowerWords = new Set(["of", "the", "and", "in", "at", "by", "for", "on", "to", "de", "la", "el"]);
+  return text
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, index) => {
+      if (index > 0 && lowerWords.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
+/**
  * Truncates text to a maximum length, adding ellipsis if needed.
  * Never truncates mid-word.
  */
