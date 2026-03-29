@@ -70,7 +70,8 @@ export function formatNumber(num: number): string {
 export function normalizeShape(shape: string | null | undefined): string {
   if (!shape) return "Unknown";
   const trimmed = shape.trim().toLowerCase();
-  if (!trimmed || trimmed === "unknown" || trimmed === "other") return "Unknown";
+  if (!trimmed || trimmed === "unknown") return "Unknown";
+  if (trimmed === "other") return "Other";
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 

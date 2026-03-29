@@ -147,7 +147,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Sightings by Shape */}
         <ChartCard title="Sightings by Shape">
           <ResponsiveContainer width="100%" height={240}>
