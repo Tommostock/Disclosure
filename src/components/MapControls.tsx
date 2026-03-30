@@ -136,8 +136,8 @@ export default function MapControlsOverlay({
         </button>
       </div>
 
-      {/* Bottom-left: Heatmap + Satellite toggles */}
-      <div className="absolute bottom-4 left-4 z-[1000] flex gap-2">
+      {/* Bottom-left: Heatmap + Satellite toggles (above bottom nav) */}
+      <div className="absolute bottom-20 left-4 z-[1000] flex gap-2">
         <button
           onClick={onHeatmapToggle}
           className={cn(
@@ -165,7 +165,7 @@ export default function MapControlsOverlay({
 
       {/* Geolocation error toast */}
       {geoError && (
-        <div className="absolute bottom-14 left-4 right-4 z-[1000]">
+        <div className="absolute bottom-[7.5rem] left-4 right-4 z-[1000]">
           <div className="rounded-lg bg-bg-primary border border-border px-4 py-3 shadow-lg">
             <p className="text-xs text-text-secondary">{geoError}</p>
           </div>
