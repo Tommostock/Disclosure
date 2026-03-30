@@ -44,3 +44,4 @@ data/*.csv
 next-env.d.ts
 
 .vercel
+data/imports/

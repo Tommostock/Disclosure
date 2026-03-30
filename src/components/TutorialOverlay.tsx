@@ -10,7 +10,7 @@ const slides = [
     icon: null,
     title: "Welcome to Disclosure",
     description:
-      "Explore over 70,000 reported UFO sightings from the NUFORC database, spanning decades and multiple countries.",
+      "Explore over 180,000 reported UFO sightings from the NUFORC database, spanning decades and 70+ countries.",
   },
   {
     icon: MapPin,
