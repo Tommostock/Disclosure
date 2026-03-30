@@ -28,7 +28,7 @@ const spaceGrotesk = Space_Grotesk({
 /* App metadata for SEO and PWA */
 export const metadata: Metadata = {
   title: "Disclosure",
-  description: "Explore the unexplained. A professional UFO sighting explorer featuring 180,000+ reported sightings from NUFORC.",
+  description: "Explore the unexplained. A professional UFO sighting explorer featuring 148,000+ reported sightings from NUFORC.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
