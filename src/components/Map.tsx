@@ -199,11 +199,11 @@ function MapContent({
      offset (~100m) to duplicate coordinates so they fan out. */
   useEffect(() => {
     /* Track how many points share each coordinate */
-    const coordCounts = new Map<string, number>();
+    const coordCounts: Record<string, number> = {};
     for (const p of points) {
       if (p.latitude != null && p.longitude != null) {
         const key = `${p.latitude},${p.longitude}`;
-        coordCounts.set(key, (coordCounts.get(key) || 0) + 1);
+        coordCounts[key] = (coordCounts[key] || 0) + 1;
       }
     }
 
@@ -217,7 +217,7 @@ function MapContent({
       .filter((p) => p.latitude != null && p.longitude != null)
       .map((p) => {
         const key = `${p.latitude},${p.longitude}`;
-        const needsJitter = (coordCounts.get(key) || 0) > 1;
+        const needsJitter = (coordCounts[key] || 0) > 1;
         return {
           type: "Feature" as const,
           geometry: {

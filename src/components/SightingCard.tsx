@@ -10,7 +10,7 @@
 
 import Link from "next/link";
 import type { Sighting } from "@/lib/database.types";
-import { formatDate, normalizeShape, truncateText, toTitleCase, cleanCity, getRegionName, getCountryName } from "@/lib/utils";
+import { formatDate, normalizeShape, truncateText, cleanCity, getRegionName, getCountryName } from "@/lib/utils";
 
 interface SightingCardProps {
   sighting: Sighting;
