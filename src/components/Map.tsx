@@ -193,24 +193,49 @@ function MapContent({
     fetchData();
   }, [fetchData, filters]);
 
-  /* Convert points to GeoJSON features and load into Supercluster */
+  /* Convert points to GeoJSON features and load into Supercluster.
+     Many NUFORC records share identical city-centroid coordinates, which
+     causes clusters that never expand on zoom. We apply a tiny random
+     offset (~100m) to duplicate coordinates so they fan out. */
   useEffect(() => {
+    /* Track how many points share each coordinate */
+    const coordCounts = new Map<string, number>();
+    for (const p of points) {
+      if (p.latitude != null && p.longitude != null) {
+        const key = `${p.latitude},${p.longitude}`;
+        coordCounts.set(key, (coordCounts.get(key) || 0) + 1);
+      }
+    }
+
+    /* Deterministic pseudo-random based on id (stable across renders) */
+    const jitter = (id: number, axis: number) => {
+      const seed = id * 2654435761 + axis;
+      return ((seed & 0xffff) / 0xffff - 0.5) * 0.002; /* ~100m spread */
+    };
+
     const features: PointFeature[] = points
       .filter((p) => p.latitude != null && p.longitude != null)
-      .map((p) => ({
-        type: "Feature" as const,
-        geometry: {
-          type: "Point" as const,
-          coordinates: [p.longitude!, p.latitude!],
-        },
-        properties: {
-          id: p.id,
-          shape: p.shape,
-          city: p.city,
-          state: p.state,
-          date_time: p.date_time,
-        },
-      }));
+      .map((p) => {
+        const key = `${p.latitude},${p.longitude}`;
+        const needsJitter = (coordCounts.get(key) || 0) > 1;
+        return {
+          type: "Feature" as const,
+          geometry: {
+            type: "Point" as const,
+            coordinates: [
+              p.longitude! + (needsJitter ? jitter(p.id, 0) : 0),
+              p.latitude! + (needsJitter ? jitter(p.id, 1) : 0),
+            ],
+          },
+          properties: {
+            id: p.id,
+            shape: p.shape,
+            city: p.city,
+            state: p.state,
+            date_time: p.date_time,
+          },
+        };
+      });
 
     clusterIndex.load(features);
 
