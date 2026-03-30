@@ -27,8 +27,8 @@ import { useTheme } from "@/hooks/useTheme";
 import type { SightingFilters } from "@/lib/queries";
 
 /* ---- Constants ---- */
-const DEFAULT_CENTER: [number, number] = [30, -20]; /* World view showing US + Europe + Australia */
-const DEFAULT_ZOOM = 3;
+const DEFAULT_CENTER: [number, number] = [39.8, -98.5]; /* Center of continental US */
+const DEFAULT_ZOOM = 4;
 
 /* Tile layer options — theme-aware + satellite toggle */
 const TILES = {
