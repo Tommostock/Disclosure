@@ -104,20 +104,17 @@ interface PointFeature {
 function MapContent({
   filters,
   onSightingSelect,
-  heatmapActive,
   onPointCountChange,
   onLoadingChange,
 }: {
   filters: SightingFilters;
   onSightingSelect: (id: number) => void;
-  heatmapActive: boolean;
   onPointCountChange: (count: number) => void;
   onLoadingChange: (loading: boolean) => void;
 }) {
   const map = useMap();
   const [points, setPoints] = useState<MapPoint[]>([]);
   const markersRef = useRef<L.LayerGroup>(L.layerGroup());
-  const heatLayerRef = useRef<L.Layer | null>(null);
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
@@ -293,53 +290,6 @@ function MapContent({
     zoomend: renderMarkers,
   });
 
-  /* Heatmap layer — toggle between markers and heatmap */
-  useEffect(() => {
-    if (heatmapActive) {
-      /* Hide clustered markers */
-      markersRef.current.clearLayers();
-
-      /* Create heatmap data: [lat, lng, intensity] */
-      const heatData = points
-        .filter((p) => p.latitude != null && p.longitude != null)
-        .map((p) => [p.latitude!, p.longitude!, 0.5] as [number, number, number]);
-
-      /* Dynamically import leaflet.heat (it extends L) */
-      import("leaflet.heat").then(() => {
-        /* Remove old heatmap if exists */
-        if (heatLayerRef.current && map.hasLayer(heatLayerRef.current)) {
-          map.removeLayer(heatLayerRef.current);
-        }
-
-        /* Create new heatmap layer */
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const heat = (L as any).heatLayer(heatData, {
-          radius: 20,
-          blur: 15,
-          maxZoom: 17,
-          gradient: {
-            0.0: "transparent",
-            0.2: "#064e3b",
-            0.4: "#059669",
-            0.6: "#22C55E",
-            0.8: "#4ADE80",
-            1.0: "#86EFAC",
-          },
-        });
-
-        heat.addTo(map);
-        heatLayerRef.current = heat;
-      });
-    } else {
-      /* Remove heatmap layer and re-render markers */
-      if (heatLayerRef.current && map.hasLayer(heatLayerRef.current)) {
-        map.removeLayer(heatLayerRef.current);
-        heatLayerRef.current = null;
-      }
-      renderMarkers();
-    }
-  }, [heatmapActive, points]); // eslint-disable-line react-hooks/exhaustive-deps
-
   return null;
 }
 
@@ -360,7 +310,6 @@ export default function Map() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<SightingFilters>({});
-  const [heatmapActive, setHeatmapActive] = useState(false);
   const [satelliteView, setSatelliteView] = useState(false);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [noResults, setNoResults] = useState(false);
@@ -423,7 +372,6 @@ export default function Map() {
         <MapContent
           filters={filters}
           onSightingSelect={handleSightingSelect}
-          heatmapActive={heatmapActive}
           onPointCountChange={(count) => {
             /* Show "no results" toast only when filters are active */
             const hasFilters = (filters.shapes?.length || 0) > 0 || !!filters.state || !!filters.dateFrom || !!filters.dateTo;
@@ -440,8 +388,6 @@ export default function Map() {
           map={mapInstance}
           onFilterClick={() => setFilterDrawerOpen(true)}
           activeFilterCount={activeFilterCount}
-          heatmapActive={heatmapActive}
-          onHeatmapToggle={() => setHeatmapActive(!heatmapActive)}
           satelliteView={satelliteView}
           onSatelliteToggle={() => setSatelliteView(!satelliteView)}
         />

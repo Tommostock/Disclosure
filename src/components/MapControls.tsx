@@ -5,14 +5,13 @@
  * the useLeafletContext error. Receives the Leaflet map instance as a prop.
  *
  * Top-left: Filter button with active filter badge
- * Top-right: Zoom in, Zoom out, Near Me
- * Bottom-left: Heatmap toggle
+ * Top-right: Zoom in, Zoom out, Near Me, Satellite toggle
  */
 
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Plus, Minus, SlidersHorizontal, Crosshair, Loader2, Globe } from "lucide-react";
+import { Plus, Minus, SlidersHorizontal, Crosshair, Loader2, Satellite } from "lucide-react";
 import L from "leaflet";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { cn } from "@/lib/utils";
@@ -21,8 +20,6 @@ interface MapControlsProps {
   map: L.Map;
   onFilterClick: () => void;
   activeFilterCount: number;
-  heatmapActive: boolean;
-  onHeatmapToggle: () => void;
   satelliteView: boolean;
   onSatelliteToggle: () => void;
 }
@@ -31,8 +28,6 @@ export default function MapControlsOverlay({
   map,
   onFilterClick,
   activeFilterCount,
-  heatmapActive,
-  onHeatmapToggle,
   satelliteView,
   onSatelliteToggle,
 }: MapControlsProps) {
@@ -99,7 +94,7 @@ export default function MapControlsOverlay({
         </button>
       </div>
 
-      {/* Top-right: Zoom controls + Near Me */}
+      {/* Top-right: Zoom controls + Near Me + Satellite */}
       <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
         <button
           onClick={() => map.zoomIn()}
@@ -134,38 +129,24 @@ export default function MapControlsOverlay({
             <Crosshair size={20} strokeWidth={1.5} />
           )}
         </button>
-      </div>
-
-      {/* Bottom-left: Heatmap + Satellite toggles (above bottom nav) */}
-      <div className="absolute bottom-20 left-4 z-[1000] flex gap-2">
-        <button
-          onClick={onHeatmapToggle}
-          className={cn(
-            "rounded-full px-4 py-2 text-xs font-medium shadow-md border transition-colors",
-            heatmapActive
-              ? "bg-accent text-black border-accent"
-              : "bg-bg-primary text-text-primary border-border hover:bg-bg-secondary"
-          )}
-        >
-          Heatmap
-        </button>
         <button
           onClick={onSatelliteToggle}
           className={cn(
-            "flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium shadow-md border transition-colors",
+            "flex h-11 w-11 items-center justify-center rounded-lg shadow-md border transition-colors",
             satelliteView
               ? "bg-accent text-black border-accent"
               : "bg-bg-primary text-text-primary border-border hover:bg-bg-secondary"
           )}
+          aria-label="Toggle satellite view"
+          title="Satellite view"
         >
-          <Globe size={14} strokeWidth={1.5} />
-          Satellite
+          <Satellite size={20} strokeWidth={1.5} />
         </button>
       </div>
 
       {/* Geolocation error toast */}
       {geoError && (
-        <div className="absolute bottom-[7.5rem] left-4 right-4 z-[1000]">
+        <div className="absolute bottom-20 left-4 right-4 z-[1000]">
           <div className="rounded-lg bg-bg-primary border border-border px-4 py-3 shadow-lg">
             <p className="text-xs text-text-secondary">{geoError}</p>
           </div>
