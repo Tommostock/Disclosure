@@ -9,8 +9,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import MiniMapTile from "@/components/MiniMapTile";
 import { getSightingById } from "@/lib/queries";
-import { formatDateTime, normalizeShape, getStateName, toTitleCase } from "@/lib/utils";
+import { formatDateTime, normalizeShape, getRegionName, getCountryName, toTitleCase } from "@/lib/utils";
 
 interface SightingDetailPageProps {
   params: Promise<{ id: string }>;
@@ -30,8 +31,9 @@ export default async function SightingDetailPage({ params }: SightingDetailPageP
     notFound();
   }
 
-  const stateName = sighting.state ? getStateName(sighting.state) : null;
-  const location = [toTitleCase(sighting.city), stateName].filter(Boolean).join(", ");
+  const regionName = sighting.state ? getRegionName(sighting.state) : null;
+  const countryName = sighting.country && sighting.country !== "US" ? getCountryName(sighting.country) : null;
+  const location = [toTitleCase(sighting.city), regionName, countryName].filter(Boolean).join(", ");
 
   return (
     <div className="px-4 py-4 md:px-6 lg:px-8 max-w-3xl mx-auto">
@@ -107,19 +109,7 @@ export default async function SightingDetailPage({ params }: SightingDetailPageP
           >
             {/* Static map image from OpenStreetMap via a tile server */}
             {/* Uses an iframe with a minimal Leaflet map at the sighting location */}
-            <div
-              className="relative h-40 w-full bg-bg-tertiary"
-              style={{
-                backgroundImage: `url(https://a.basemaps.cartocdn.com/dark_all/${Math.floor(10)}/${Math.floor((sighting.longitude + 180) / 360 * 1024)}/${Math.floor((1 - Math.log(Math.tan(sighting.latitude * Math.PI / 180) + 1 / Math.cos(sighting.latitude * Math.PI / 180)) / Math.PI) / 2 * 1024)}@2x.png)`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              {/* Green dot at center showing the sighting location */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-4 w-4 rounded-full bg-accent shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
-              </div>
-            </div>
+            <MiniMapTile latitude={sighting.latitude} longitude={sighting.longitude} />
           </Link>
           <Link
             href={`/?lat=${sighting.latitude}&lng=${sighting.longitude}&zoom=14`}

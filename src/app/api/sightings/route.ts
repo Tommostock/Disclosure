@@ -33,13 +33,14 @@ export async function GET(request: NextRequest) {
   /* Parse optional filters */
   const shapesParam = params.get("shapes");
   const shapes = shapesParam ? shapesParam.split(",").filter(Boolean) : undefined;
+  const country = params.get("country") || undefined;
   const state = params.get("state") || undefined;
   const dateFrom = params.get("dateFrom") || undefined;
   const dateTo = params.get("dateTo") || undefined;
 
   const data = await getSightingsInViewport(
     { north, south, east, west },
-    { shapes, state, dateFrom, dateTo }
+    { shapes, country, state, dateFrom, dateTo }
   );
 
   return NextResponse.json(data);

@@ -14,7 +14,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Search, SlidersHorizontal, ChevronDown, ChevronUp, Loader2, X } from "lucide-react";
 import SightingCard from "@/components/SightingCard";
-import { UFO_SHAPES, US_STATES, cn, formatNumber } from "@/lib/utils";
+import { UFO_SHAPES, COUNTRIES, REGIONS_BY_COUNTRY, cn, formatNumber } from "@/lib/utils";
 import type { Sighting } from "@/lib/database.types";
 
 export default function SearchPage() {
@@ -30,10 +30,14 @@ export default function SearchPage() {
   /* Filter state */
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedShapes, setSelectedShapes] = useState<string[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [yearFrom, setYearFrom] = useState("");
   const [yearTo, setYearTo] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "state">("newest");
+
+  /* Regions for the selected country */
+  const regions = selectedCountry ? (REGIONS_BY_COUNTRY[selectedCountry] || []) : [];
 
   const YEARS = Array.from(
     { length: new Date().getFullYear() - 1940 + 1 },
@@ -49,6 +53,7 @@ export default function SearchPage() {
       const params = new URLSearchParams();
       if (searchText.trim()) params.set("q", searchText.trim());
       if (selectedShapes.length > 0) params.set("shapes", selectedShapes.join(","));
+      if (selectedCountry) params.set("country", selectedCountry);
       if (selectedState) params.set("state", selectedState);
       if (yearFrom) params.set("dateFrom", `${yearFrom}-01-01T00:00:00Z`);
       if (yearTo) params.set("dateTo", `${yearTo}-12-31T23:59:59Z`);
@@ -71,7 +76,7 @@ export default function SearchPage() {
         setLoading(false);
       }
     },
-    [searchText, selectedShapes, selectedState, yearFrom, yearTo, sortBy]
+    [searchText, selectedShapes, selectedCountry, selectedState, yearFrom, yearTo, sortBy]
   );
 
   /* Debounced search on text or filter change */
@@ -138,10 +143,10 @@ export default function SearchPage() {
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={16} strokeWidth={1.5} />
           <span>Filters</span>
-          {(selectedShapes.length > 0 || selectedState || yearFrom || yearTo) && (
+          {(selectedShapes.length > 0 || selectedCountry || selectedState || yearFrom || yearTo) && (
             <span className="flex h-5 w-5 items-center justify-center rounded-full
                              bg-accent text-xs font-bold text-black">
-              {selectedShapes.length + (selectedState ? 1 : 0) + (yearFrom ? 1 : 0) + (yearTo ? 1 : 0)}
+              {selectedShapes.length + (selectedCountry ? 1 : 0) + (selectedState ? 1 : 0) + (yearFrom ? 1 : 0) + (yearTo ? 1 : 0)}
             </span>
           )}
         </div>
@@ -178,18 +183,18 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* State + Sort row */}
+          {/* Country + Region + Sort */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <h3 className="mb-2 text-xs font-semibold text-text-secondary">State</h3>
+              <h3 className="mb-2 text-xs font-semibold text-text-secondary">Country</h3>
               <select
-                value={selectedState}
-                onChange={(e) => setSelectedState(e.target.value)}
+                value={selectedCountry}
+                onChange={(e) => { setSelectedCountry(e.target.value); setSelectedState(""); }}
                 className="w-full rounded-lg border border-border-strong bg-bg-tertiary
                            px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
               >
-                <option value="">All States</option>
-                {US_STATES.map(({ code, name }) => (
+                <option value="">All Countries</option>
+                {COUNTRIES.map(({ code, name }) => (
                   <option key={code} value={code}>{name}</option>
                 ))}
               </select>
@@ -204,10 +209,30 @@ export default function SearchPage() {
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
-                <option value="state">State A-Z</option>
+                <option value="state">Region A-Z</option>
               </select>
             </div>
           </div>
+
+          {/* Region dropdown (shown only when country has regions) */}
+          {regions.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-xs font-semibold text-text-secondary">
+                {selectedCountry === "CA" ? "Province" : "State"}
+              </h3>
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                className="w-full rounded-lg border border-border-strong bg-bg-tertiary
+                           px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">All {selectedCountry === "CA" ? "Provinces" : "States"}</option>
+                {regions.map(({ code, name }) => (
+                  <option key={code} value={code}>{name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Date range */}
           <div>

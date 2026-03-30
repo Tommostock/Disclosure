@@ -13,6 +13,7 @@ import type { Sighting } from "./database.types";
 /** Filters that can be applied to sighting queries */
 export interface SightingFilters {
   shapes?: string[];
+  country?: string;
   state?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -34,6 +35,7 @@ export interface MapPoint {
   shape: string | null;
   city: string | null;
   state: string | null;
+  country: string | null;
   date_time: string | null;
 }
 
@@ -51,7 +53,7 @@ export async function getSightingsInViewport(
 ): Promise<MapPoint[]> {
   let query = supabase
     .from("sightings")
-    .select("id, latitude, longitude, shape, city, state, date_time")
+    .select("id, latitude, longitude, shape, city, state, country, date_time")
     .gte("latitude", bounds.south)
     .lte("latitude", bounds.north)
     .gte("longitude", bounds.west)
@@ -63,6 +65,9 @@ export async function getSightingsInViewport(
   /* Apply optional filters */
   if (filters?.shapes && filters.shapes.length > 0) {
     query = query.in("shape", filters.shapes.map((s) => s.toLowerCase()));
+  }
+  if (filters?.country) {
+    query = query.eq("country", filters.country.toUpperCase());
   }
   if (filters?.state) {
     query = query.eq("state", filters.state.toUpperCase());
@@ -133,6 +138,9 @@ export async function searchSightings(params: {
   /* Apply filters */
   if (filters?.shapes && filters.shapes.length > 0) {
     dbQuery = dbQuery.in("shape", filters.shapes.map((s) => s.toLowerCase()));
+  }
+  if (filters?.country) {
+    dbQuery = dbQuery.eq("country", filters.country.toUpperCase());
   }
   if (filters?.state) {
     dbQuery = dbQuery.eq("state", filters.state.toUpperCase());

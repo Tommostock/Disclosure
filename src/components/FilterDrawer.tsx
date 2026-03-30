@@ -13,7 +13,7 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { UFO_SHAPES, US_STATES, cn } from "@/lib/utils";
+import { UFO_SHAPES, COUNTRIES, REGIONS_BY_COUNTRY, cn } from "@/lib/utils";
 import type { SightingFilters } from "@/lib/queries";
 
 interface FilterDrawerProps {
@@ -36,6 +36,7 @@ export default function FilterDrawer({
 }: FilterDrawerProps) {
   /* Local state for filters (applied on "Apply" click) */
   const [selectedShapes, setSelectedShapes] = useState<string[]>(filters.shapes || []);
+  const [selectedCountry, setSelectedCountry] = useState<string>(filters.country || "");
   const [selectedState, setSelectedState] = useState<string>(filters.state || "");
   const [yearFrom, setYearFrom] = useState<string>(
     filters.dateFrom ? new Date(filters.dateFrom).getFullYear().toString() : ""
@@ -44,10 +45,14 @@ export default function FilterDrawer({
     filters.dateTo ? new Date(filters.dateTo).getFullYear().toString() : ""
   );
 
+  /* Regions for the selected country (empty array if none) */
+  const regions = selectedCountry ? (REGIONS_BY_COUNTRY[selectedCountry] || []) : [];
+
   /* Sync local state when drawer opens */
   useEffect(() => {
     if (isOpen) {
       setSelectedShapes(filters.shapes || []);
+      setSelectedCountry(filters.country || "");
       setSelectedState(filters.state || "");
       setYearFrom(filters.dateFrom ? new Date(filters.dateFrom).getFullYear().toString() : "");
       setYearTo(filters.dateTo ? new Date(filters.dateTo).getFullYear().toString() : "");
@@ -66,6 +71,7 @@ export default function FilterDrawer({
   function handleApply() {
     onApply({
       shapes: selectedShapes.length > 0 ? selectedShapes : undefined,
+      country: selectedCountry || undefined,
       state: selectedState || undefined,
       dateFrom: yearFrom ? `${yearFrom}-01-01T00:00:00Z` : undefined,
       dateTo: yearTo ? `${yearTo}-12-31T23:59:59Z` : undefined,
@@ -75,6 +81,7 @@ export default function FilterDrawer({
   /* Clear all filters */
   function handleClear() {
     setSelectedShapes([]);
+    setSelectedCountry("");
     setSelectedState("");
     setYearFrom("");
     setYearTo("");
@@ -138,24 +145,47 @@ export default function FilterDrawer({
             </div>
           </div>
 
-          {/* State filter */}
+          {/* Country filter */}
           <div className="mb-6">
-            <h3 className="mb-3 text-sm font-semibold text-text-secondary">State</h3>
+            <h3 className="mb-3 text-sm font-semibold text-text-secondary">Country</h3>
             <select
-              value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
+              value={selectedCountry}
+              onChange={(e) => { setSelectedCountry(e.target.value); setSelectedState(""); }}
               className="w-full rounded-lg border border-border-strong bg-bg-tertiary
                          px-3 py-2.5 text-sm text-text-primary
                          focus:outline-none focus:ring-2 focus:ring-accent"
             >
-              <option value="">All States</option>
-              {US_STATES.map(({ code, name }) => (
+              <option value="">All Countries</option>
+              {COUNTRIES.map(({ code, name }) => (
                 <option key={code} value={code}>
                   {name}
                 </option>
               ))}
             </select>
           </div>
+
+          {/* Region filter (shown only when country has regions) */}
+          {regions.length > 0 && (
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-semibold text-text-secondary">
+                {selectedCountry === "CA" ? "Province" : "State"}
+              </h3>
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                className="w-full rounded-lg border border-border-strong bg-bg-tertiary
+                           px-3 py-2.5 text-sm text-text-primary
+                           focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">All {selectedCountry === "CA" ? "Provinces" : "States"}</option>
+                {regions.map(({ code, name }) => (
+                  <option key={code} value={code}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Date range filter */}
           <div className="mb-6">

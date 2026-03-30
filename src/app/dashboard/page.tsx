@@ -196,8 +196,8 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Top States */}
-        <ChartCard title="Top States">
+        {/* Top Regions */}
+        <ChartCard title="Top Regions">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={stateData} layout="vertical" margin={{ left: 0, right: 10 }}>
               <XAxis type="number" hide />

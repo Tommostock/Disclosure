@@ -106,9 +106,29 @@ export function truncateText(text: string, maxLength: number = 150): string {
 }
 
 /**
- * Gets the full name for a US state abbreviation.
+ * Country code to full name mapping.
  */
-const STATE_NAMES: Record<string, string> = {
+const COUNTRY_NAMES: Record<string, string> = {
+  US: "United States",
+  CA: "Canada",
+  GB: "United Kingdom",
+  AU: "Australia",
+  DE: "Germany",
+};
+
+export function getCountryName(code: string): string {
+  return COUNTRY_NAMES[code.toUpperCase()] || code;
+}
+
+export const COUNTRIES = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({
+  code,
+  name,
+})).sort((a, b) => a.name.localeCompare(b.name));
+
+/**
+ * US state abbreviation to full name mapping.
+ */
+const US_STATE_NAMES: Record<string, string> = {
   AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
   CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
   FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho",
@@ -124,17 +144,58 @@ const STATE_NAMES: Record<string, string> = {
   WI: "Wisconsin", WY: "Wyoming", DC: "District of Columbia",
 };
 
+/**
+ * Canadian province/territory abbreviation to full name mapping.
+ */
+const CA_PROVINCE_NAMES: Record<string, string> = {
+  AB: "Alberta", BC: "British Columbia", MB: "Manitoba",
+  NB: "New Brunswick", NF: "Newfoundland", NS: "Nova Scotia",
+  NT: "Northwest Territories", NU: "Nunavut", ON: "Ontario",
+  PE: "Prince Edward Island", PQ: "Quebec", QC: "Quebec",
+  SK: "Saskatchewan", YT: "Yukon", YK: "Yukon",
+  SA: "Saskatchewan",
+};
+
+/**
+ * Combined region lookup — resolves both US states and CA provinces.
+ */
+const REGION_NAMES: Record<string, string> = {
+  ...US_STATE_NAMES,
+  ...CA_PROVINCE_NAMES,
+};
+
+export function getRegionName(abbreviation: string): string {
+  return REGION_NAMES[abbreviation.toUpperCase()] || abbreviation;
+}
+
+/** @deprecated Use getRegionName instead */
 export function getStateName(abbreviation: string): string {
-  return STATE_NAMES[abbreviation.toUpperCase()] || abbreviation;
+  return getRegionName(abbreviation);
 }
 
 /**
  * List of all US states for filter dropdowns.
  */
-export const US_STATES = Object.entries(STATE_NAMES).map(([code, name]) => ({
+export const US_STATES = Object.entries(US_STATE_NAMES).map(([code, name]) => ({
   code,
   name,
 })).sort((a, b) => a.name.localeCompare(b.name));
+
+/**
+ * List of Canadian provinces for filter dropdowns.
+ */
+export const CA_PROVINCES = Object.entries(CA_PROVINCE_NAMES)
+  .filter(([code]) => !["QC", "YK", "SA"].includes(code)) // skip aliases
+  .map(([code, name]) => ({ code, name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+/**
+ * Regions grouped by country code, for dynamic filter dropdowns.
+ */
+export const REGIONS_BY_COUNTRY: Record<string, { code: string; name: string }[]> = {
+  US: US_STATES,
+  CA: CA_PROVINCES,
+};
 
 /**
  * Common UFO shapes for filter chips.

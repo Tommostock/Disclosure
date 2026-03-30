@@ -1,13 +1,15 @@
 /**
  * Data Import Script — Loads NUFORC sighting data from CSV into Supabase.
  *
- * Usage: npx tsx scripts/import-data.ts
+ * Usage:
+ *   npx tsx scripts/import-data.ts                  # Import all countries
+ *   npx tsx scripts/import-data.ts --international   # Import non-US only (CA, GB, AU, DE)
  *
  * This script:
  * 1. Reads the CSV file from data/nuforc_sightings.csv
  * 2. Parses each row and maps it to the sightings table schema
  * 3. Filters out rows missing latitude/longitude
- * 4. Filters to US sightings only (country = "us")
+ * 4. Accepts sightings from US, CA, GB, AU, DE (skips empty country)
  * 5. Bulk inserts in batches of 500 for efficiency
  *
  * The CSV has no header row. Columns are:
@@ -36,6 +38,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CSV_PATH = resolve(__dirname, "../data/nuforc_sightings.csv");
 const BATCH_SIZE = 500;
+const INTERNATIONAL_ONLY = process.argv.includes("--international");
 
 /* ---- Types ---- */
 interface SightingRow {
@@ -118,6 +121,9 @@ function decodeHtml(text: string): string {
 /* ---- Main Import Function ---- */
 async function importData() {
   console.log("Starting NUFORC data import...");
+  if (INTERNATIONAL_ONLY) {
+    console.log("Mode: International only (skipping US records)");
+  }
   console.log(`Reading CSV from: ${CSV_PATH}`);
 
   let batch: SightingRow[] = [];
@@ -150,19 +156,29 @@ async function importData() {
     const lat = parseFloat(row[9] as string);
     const lng = parseFloat(row[10] as string);
 
-    /* Filter: US only, must have valid coordinates */
-    if (country !== "us") {
+    /* Accepted countries */
+    const ACCEPTED_COUNTRIES = new Set(["us", "ca", "gb", "au", "de"]);
+
+    /* Filter: must have a known country */
+    if (!country || !ACCEPTED_COUNTRIES.has(country)) {
       totalSkipped++;
       continue;
     }
 
+    /* Skip US records when importing international only */
+    if (INTERNATIONAL_ONLY && country === "us") {
+      totalSkipped++;
+      continue;
+    }
+
+    /* Filter: must have valid coordinates */
     if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
       totalSkipped++;
       continue;
     }
 
-    /* Filter: must be within reasonable US bounds */
-    if (lat < 18 || lat > 72 || lng < -180 || lng > -60) {
+    /* Filter: must be within valid global bounds */
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       totalSkipped++;
       continue;
     }
@@ -171,7 +187,7 @@ async function importData() {
       date_time: parseDateTime(dateTime),
       city: city ? decodeHtml(city.trim()) : null,
       state: state,
-      country: "US",
+      country: country.toUpperCase(),
       shape: shape ? shape.trim().toLowerCase() : null,
       duration: durationText ? decodeHtml(durationText.trim()) : null,
       summary: summary ? decodeHtml(summary.trim()) : null,

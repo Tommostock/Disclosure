@@ -10,7 +10,7 @@
 
 import Link from "next/link";
 import type { Sighting } from "@/lib/database.types";
-import { formatDate, normalizeShape, truncateText, toTitleCase } from "@/lib/utils";
+import { formatDate, normalizeShape, truncateText, toTitleCase, getRegionName, getCountryName } from "@/lib/utils";
 
 interface SightingCardProps {
   sighting: Sighting;
@@ -51,9 +51,13 @@ export default function SightingCard({ sighting, showYear }: SightingCardProps) 
             )}
           </div>
 
-          {/* City, State */}
+          {/* City, Region, Country */}
           <h3 className="text-sm font-semibold text-text-primary mb-1">
-            {[toTitleCase(sighting.city), sighting.state].filter(Boolean).join(", ") || "Unknown Location"}
+            {[
+              toTitleCase(sighting.city),
+              sighting.state ? getRegionName(sighting.state) : null,
+              sighting.country && sighting.country !== "US" ? getCountryName(sighting.country) : null,
+            ].filter(Boolean).join(", ") || "Unknown Location"}
           </h3>
 
           {/* Truncated summary */}

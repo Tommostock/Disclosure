@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
   const query = params.get("q") || undefined;
   const shapesParam = params.get("shapes");
   const shapes = shapesParam ? shapesParam.split(",").filter(Boolean) : undefined;
+  const country = params.get("country") || undefined;
   const state = params.get("state") || undefined;
   const dateFrom = params.get("dateFrom") || undefined;
   const dateTo = params.get("dateTo") || undefined;
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   const result = await searchSightings({
     query,
-    filters: { shapes, state, dateFrom, dateTo },
+    filters: { shapes, country, state, dateFrom, dateTo },
     sortBy,
     page,
     limit,
