@@ -13,7 +13,7 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import type { Sighting } from "@/lib/database.types";
-import { formatDateTime, normalizeShape, toTitleCase } from "@/lib/utils";
+import { formatDateTime, normalizeShape, cleanCity } from "@/lib/utils";
 
 interface SightingPanelProps {
   sighting: Sighting | null;
@@ -93,7 +93,7 @@ export default function SightingPanel({ sighting, isOpen, onClose }: SightingPan
 
               {/* City, State */}
               <h2 className="text-lg font-bold text-text-primary">
-                {[toTitleCase(sighting.city), sighting.state].filter(Boolean).join(", ") || "Unknown Location"}
+                {[cleanCity(sighting.city), sighting.state].filter(Boolean).join(", ") || "Unknown Location"}
               </h2>
 
               {/* Duration */}

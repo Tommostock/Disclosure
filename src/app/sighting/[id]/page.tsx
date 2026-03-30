@@ -11,7 +11,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import MiniMapTile from "@/components/MiniMapTile";
 import { getSightingById } from "@/lib/queries";
-import { formatDateTime, normalizeShape, getRegionName, getCountryName, toTitleCase } from "@/lib/utils";
+import { formatDateTime, normalizeShape, getRegionName, getCountryName, cleanCity } from "@/lib/utils";
 
 interface SightingDetailPageProps {
   params: Promise<{ id: string }>;
@@ -33,7 +33,7 @@ export default async function SightingDetailPage({ params }: SightingDetailPageP
 
   const regionName = sighting.state ? getRegionName(sighting.state) : null;
   const countryName = sighting.country && sighting.country !== "US" ? getCountryName(sighting.country) : null;
-  const location = [toTitleCase(sighting.city), regionName, countryName].filter(Boolean).join(", ");
+  const location = [cleanCity(sighting.city), regionName, countryName].filter(Boolean).join(", ");
 
   return (
     <div className="px-4 py-4 md:px-6 lg:px-8 max-w-3xl mx-auto">

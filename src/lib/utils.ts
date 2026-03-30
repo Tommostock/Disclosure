@@ -89,9 +89,24 @@ export function toTitleCase(text: string | null | undefined): string {
     .split(/\s+/)
     .map((word, index) => {
       if (index > 0 && lowerWords.has(word)) return word;
-      return word.charAt(0).toUpperCase() + word.slice(1);
+      /* Capitalize after apostrophe (e.g. o'fallon → O'Fallon) */
+      return word.replace(/(^|')(.)/, (_match, apos, ch) => apos + ch.toUpperCase());
     })
     .join(" ");
+}
+
+/**
+ * Cleans a city name by removing parenthetical suffixes that repeat country/region info.
+ * Examples:
+ *   "toronto (canada)"           → "Toronto"
+ *   "chester (uk/england)"       → "Chester"
+ *   "st. louis (greater st. louis area)" → "St. Louis"
+ */
+export function cleanCity(city: string | null | undefined): string {
+  if (!city) return "";
+  /* Strip everything from the first '(' onward, then title-case */
+  const stripped = city.replace(/\s*\(.*$/, "").trim();
+  return toTitleCase(stripped);
 }
 
 /**
