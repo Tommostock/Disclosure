@@ -89,8 +89,9 @@ export function toTitleCase(text: string | null | undefined): string {
     .split(/\s+/)
     .map((word, index) => {
       if (index > 0 && lowerWords.has(word)) return word;
-      /* Capitalize after apostrophe (e.g. o'fallon → O'Fallon) */
-      return word.replace(/(^|')(.)/, (_match, apos, ch) => apos + ch.toUpperCase());
+      /* Capitalize first char, then capitalize after apostrophes (e.g. o'fallon → O'Fallon) */
+      const capped = word.charAt(0).toUpperCase() + word.slice(1);
+      return capped.replace(/'(.)/g, (_, ch) => "'" + ch.toUpperCase());
     })
     .join(" ");
 }
