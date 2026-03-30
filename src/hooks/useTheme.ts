@@ -6,6 +6,7 @@
  * 2. On subsequent visits, reads the saved preference from localStorage
  * 3. Toggles the "dark" class on <html> to switch themes
  * 4. The "mounted" flag prevents hydration mismatch between server and client
+ * 5. A MutationObserver keeps all useTheme instances in sync
  */
 
 "use client";
@@ -16,6 +17,11 @@ import { useState, useEffect, useCallback } from "react";
 const STORAGE_KEY = "disclosure-theme";
 
 type Theme = "light" | "dark";
+
+/** Reads the current theme from the <html> element's class list */
+function readThemeFromDOM(): Theme {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
 
 export function useTheme() {
   /* Start with "light" — this matches what the server renders */
@@ -38,25 +44,17 @@ export function useTheme() {
 
     setMounted(true);
 
-    /* Listen for theme changes from other components using this hook */
-    function handleStorage(e: StorageEvent) {
-      if (e.key === STORAGE_KEY && (e.newValue === "light" || e.newValue === "dark")) {
-        setTheme(e.newValue);
-      }
-    }
-    window.addEventListener("storage", handleStorage);
+    /* Observe the <html> class list so all useTheme instances stay in sync.
+       When one instance toggles the class, others pick it up here. */
+    const observer = new MutationObserver(() => {
+      setTheme(readThemeFromDOM());
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
-    /* Also listen for a custom event for same-tab sync */
-    function handleThemeChange(e: Event) {
-      const newTheme = (e as CustomEvent).detail as Theme;
-      setTheme(newTheme);
-    }
-    window.addEventListener("theme-change", handleThemeChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("theme-change", handleThemeChange);
-    };
+    return () => observer.disconnect();
   }, []);
 
   /* Whenever the theme changes, update the DOM and localStorage */
@@ -64,11 +62,15 @@ export function useTheme() {
     if (!mounted) return;
 
     const root = document.documentElement;
+    const currentDOM = readThemeFromDOM();
 
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
+    /* Only mutate the DOM if it's out of sync — prevents observer loop */
+    if (currentDOM !== theme) {
+      if (theme === "dark") {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
     }
 
     localStorage.setItem(STORAGE_KEY, theme);
@@ -76,12 +78,7 @@ export function useTheme() {
 
   /* Toggle function to switch between light and dark */
   const toggleTheme = useCallback(() => {
-    setTheme((current) => {
-      const next = current === "dark" ? "light" : "dark";
-      /* Dispatch custom event so all useTheme instances in this tab sync */
-      window.dispatchEvent(new CustomEvent("theme-change", { detail: next }));
-      return next;
-    });
+    setTheme((current) => (current === "dark" ? "light" : "dark"));
   }, []);
 
   return { theme, toggleTheme, mounted };

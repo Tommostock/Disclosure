@@ -33,7 +33,7 @@ export default async function TodayPage() {
         <p className="text-lg text-accent font-semibold mt-1">{dateLabel}</p>
         <p className="text-sm text-text-secondary mt-1">
           {sightings.length > 0
-            ? `${sightings.length} sighting${sightings.length !== 1 ? "s" : ""} reported on this date`
+            ? `${sightings.length} sighting${sightings.length !== 1 ? "s" : ""} reported on this date across all years`
             : ""}
         </p>
       </div>

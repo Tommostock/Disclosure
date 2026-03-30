@@ -16,6 +16,7 @@ import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import OfflineBanner from "@/components/OfflineBanner";
+import TutorialOverlay from "@/components/TutorialOverlay";
 
 /* Load Space Grotesk — the only font used in the app */
 const spaceGrotesk = Space_Grotesk({
@@ -65,6 +66,9 @@ export default function RootLayout({
 
         {/* Fixed bottom navigation */}
         <BottomNav />
+
+        {/* First-visit tutorial overlay */}
+        <TutorialOverlay />
 
         {/* Register service worker for PWA */}
         <ServiceWorkerRegistration />
