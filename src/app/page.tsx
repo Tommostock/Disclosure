@@ -13,7 +13,7 @@ import dynamic from "next/dynamic";
 const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[calc(100vh-7.5rem)] items-center justify-center bg-[#0A0A0A]">
+    <div className="flex h-[calc(100vh-7.5rem)] items-center justify-center bg-bg-primary">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
     </div>
   ),

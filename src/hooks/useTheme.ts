@@ -37,6 +37,26 @@ export function useTheme() {
     }
 
     setMounted(true);
+
+    /* Listen for theme changes from other components using this hook */
+    function handleStorage(e: StorageEvent) {
+      if (e.key === STORAGE_KEY && (e.newValue === "light" || e.newValue === "dark")) {
+        setTheme(e.newValue);
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+
+    /* Also listen for a custom event for same-tab sync */
+    function handleThemeChange(e: Event) {
+      const newTheme = (e as CustomEvent).detail as Theme;
+      setTheme(newTheme);
+    }
+    window.addEventListener("theme-change", handleThemeChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("theme-change", handleThemeChange);
+    };
   }, []);
 
   /* Whenever the theme changes, update the DOM and localStorage */
@@ -56,7 +76,12 @@ export function useTheme() {
 
   /* Toggle function to switch between light and dark */
   const toggleTheme = useCallback(() => {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
+    setTheme((current) => {
+      const next = current === "dark" ? "light" : "dark";
+      /* Dispatch custom event so all useTheme instances in this tab sync */
+      window.dispatchEvent(new CustomEvent("theme-change", { detail: next }));
+      return next;
+    });
   }, []);
 
   return { theme, toggleTheme, mounted };
